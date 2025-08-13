@@ -56,17 +56,22 @@ function setupEventListeners() {
 // Загрузка списка фильмов
 async function loadMovies() {
     try {
+        console.log('📋 Начинаем загрузку списка фильмов...');
         showLoading();
+        
+        console.log('📤 Отправляем команду get_movies боту...');
         
         // Отправляем команду боту для получения списка фильмов
         await sendBotCommand('get_movies');
+        
+        console.log('✅ Команда get_movies успешно отправлена боту');
         
         // Бот ответит через Telegram Web App API
         // Список будет обновлен автоматически
         showNotification('Запрос списка фильмов отправлен боту', 'info');
         
     } catch (error) {
-        console.error('Ошибка загрузки фильмов:', error);
+        console.error('❌ Ошибка загрузки фильмов:', error);
         showError('Не удалось загрузить список фильмов');
     }
 }
@@ -112,6 +117,8 @@ async function addMovie() {
     const movieInput = document.getElementById('movieInput');
     const movieTitle = movieInput.value.trim();
     
+    console.log('🎬 Попытка добавить фильм:', movieTitle);
+    
     if (!movieTitle) {
         showNotification('Введите название фильма', 'error');
         return;
@@ -123,9 +130,12 @@ async function addMovie() {
     }
     
     try {
+        console.log('📤 Отправляем команду add_movie боту...');
+        
         // Отправляем команду боту для добавления фильма
         await sendBotCommand('add_movie', { movie: movieTitle });
         
+        console.log('✅ Команда успешно отправлена боту');
         showNotification('Команда добавления фильма отправлена боту!', 'success');
         movieInput.value = '';
         movieInput.focus();
@@ -133,7 +143,7 @@ async function addMovie() {
         // Бот обновит список автоматически
         
     } catch (error) {
-        console.error('Ошибка добавления фильма:', error);
+        console.error('❌ Ошибка добавления фильма:', error);
         showNotification('Не удалось добавить фильм', 'error');
     }
 }
@@ -161,10 +171,16 @@ async function removeMovie(movieTitle, index) {
 // Отправка команды боту через Telegram Web App
 async function sendBotCommand(command, data = {}) {
     try {
+        console.log('🚀 Начинаем отправку команды боту...');
+        
         // Проверяем, что мы в Telegram Web App
         if (!window.Telegram || !window.Telegram.WebApp) {
+            console.error('❌ Telegram Web App не доступен');
             throw new Error('Telegram Web App не доступен');
         }
+        
+        console.log('✅ Telegram Web App доступен');
+        console.log('📱 tg объект:', window.Telegram.WebApp);
         
         // Формируем данные команды
         const commandData = {
@@ -173,16 +189,18 @@ async function sendBotCommand(command, data = {}) {
             timestamp: Date.now()
         };
         
-        console.log('Отправляем команду боту:', commandData);
+        console.log('📤 Отправляем команду боту:', commandData);
+        console.log('📤 JSON данные:', JSON.stringify(commandData));
         
         // Отправляем данные через Telegram Web App
-        window.Telegram.WebApp.sendData(JSON.stringify(commandData));
+        const result = window.Telegram.WebApp.sendData(JSON.stringify(commandData));
+        console.log('📤 Результат sendData:', result);
         
         // Отправляем команду боту и ждем ответа
         return { success: true, message: 'Команда отправлена боту' };
         
     } catch (error) {
-        console.error('Ошибка отправки команды боту:', error);
+        console.error('❌ Ошибка отправки команды боту:', error);
         throw error;
     }
 }
