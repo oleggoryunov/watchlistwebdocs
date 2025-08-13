@@ -59,13 +59,12 @@ async function loadMovies() {
         showLoading();
         
         // Отправляем команду боту для получения списка фильмов
-        const response = await sendBotCommand('get_movies');
+        await sendBotCommand('get_movies');
         
-        if (response.success) {
-            displayMovies(response.movies || []);
-        } else {
-            showError('Ошибка загрузки списка фильмов');
-        }
+        // Бот ответит через Telegram Web App API
+        // Список будет обновлен автоматически
+        showNotification('Запрос списка фильмов отправлен боту', 'info');
+        
     } catch (error) {
         console.error('Ошибка загрузки фильмов:', error);
         showError('Не удалось загрузить список фильмов');
@@ -125,18 +124,14 @@ async function addMovie() {
     
     try {
         // Отправляем команду боту для добавления фильма
-        const response = await sendBotCommand('add_movie', { movie: movieTitle });
+        await sendBotCommand('add_movie', { movie: movieTitle });
         
-        if (response.success) {
-            showNotification('Фильм добавлен в список!', 'success');
-            movieInput.value = '';
-            movieInput.focus();
-            
-            // Перезагружаем список
-            loadMovies();
-        } else {
-            showNotification(response.message || 'Ошибка добавления фильма', 'error');
-        }
+        showNotification('Команда добавления фильма отправлена боту!', 'success');
+        movieInput.value = '';
+        movieInput.focus();
+        
+        // Бот обновит список автоматически
+        
     } catch (error) {
         console.error('Ошибка добавления фильма:', error);
         showNotification('Не удалось добавить фильм', 'error');
@@ -151,16 +146,12 @@ async function removeMovie(movieTitle, index) {
     
     try {
         // Отправляем команду боту для удаления фильма
-        const response = await sendBotCommand('remove_movie', { movie: movieTitle });
+        await sendBotCommand('remove_movie', { movie: movieTitle });
         
-        if (response.success) {
-            showNotification('Фильм удален из списка', 'success');
-            
-            // Перезагружаем список
-            loadMovies();
-        } else {
-            showNotification(response.message || 'Ошибка удаления фильма', 'error');
-        }
+        showNotification('Команда удаления фильма отправлена боту!', 'success');
+        
+        // Бот обновит список автоматически
+        
     } catch (error) {
         console.error('Ошибка удаления фильма:', error);
         showNotification('Не удалось удалить фильм', 'error');
@@ -179,8 +170,7 @@ async function sendBotCommand(command, data = {}) {
         const commandData = {
             command: command,
             data: data,
-            timestamp: Date.now(),
-            mode: 'local' // Указываем, что работаем локально
+            timestamp: Date.now()
         };
         
         console.log('Отправляем команду боту:', commandData);
@@ -188,12 +178,7 @@ async function sendBotCommand(command, data = {}) {
         // Отправляем данные через Telegram Web App
         window.Telegram.WebApp.sendData(JSON.stringify(commandData));
         
-        // В локальном режиме возвращаем симуляцию ответа
-        // В реальности бот обработает команду и ответит
-        if (window.WatchlistConfig.mode === 'local') {
-            return await simulateLocalResponse(command, data);
-        }
-        
+        // Отправляем команду боту и ждем ответа
         return { success: true, message: 'Команда отправлена боту' };
         
     } catch (error) {
@@ -202,38 +187,7 @@ async function sendBotCommand(command, data = {}) {
     }
 }
 
-// Симуляция локального ответа для тестирования
-async function simulateLocalResponse(command, data) {
-    // Имитируем задержку сети
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    switch (command) {
-        case 'get_movies':
-            // В реальности бот вернет актуальный список из файла
-            return {
-                success: true,
-                movies: ['Матрица', 'Терминатор', 'Чужой', 'Инцепция']
-            };
-            
-        case 'add_movie':
-            return {
-                success: true,
-                message: 'Фильм успешно добавлен (команда отправлена боту)'
-            };
-            
-        case 'remove_movie':
-            return {
-                success: true,
-                message: 'Фильм успешно удален (команда отправлена боту)'
-            };
-            
-        default:
-            return {
-                success: false,
-                message: 'Неизвестная команда'
-            };
-    }
-}
+
 
 // Показ загрузки
 function showLoading() {

@@ -1,41 +1,33 @@
 // Конфигурация Watchlist WebApp
 window.WatchlistConfig = {
     // URL для webapp (будет заменен на GitHub Pages URL)
-    webappUrl: 'https://GITHUB_USERNAME.github.io/GITHUB_REPO_NAME-webapp',
+    webappUrl: 'https://oleggoryunov.github.io/watchlistwebdocs',
     
     // Настройки уведомлений
     notifications: {
-        duration: 3000, // Длительность показа уведомлений в мс
-        position: 'top-right' // Позиция уведомлений
+        duration: 3000, // 3 секунды
+        types: ['success', 'error', 'info', 'warning']
     },
     
-    // Настройки валидации
+    // Валидация названий фильмов
     validation: {
-        minMovieLength: 2, // Минимальная длина названия фильма
-        maxMovieLength: 100 // Максимальная длина названия фильма
+        minLength: 2,
+        maxLength: 100,
+        allowedChars: /^[а-яёa-z0-9\s\-_.,!?()]+$/i
     },
     
-    // Настройки интерфейса
+    // Настройки UI
     ui: {
-        autoFocus: true, // Автофокус на поле ввода
-        confirmDelete: true, // Подтверждение удаления
-        showLoading: true // Показ индикатора загрузки
+        theme: 'auto', // auto, light, dark
+        language: 'ru',
+        animations: true
     },
     
     // Настройки Telegram Web App
     telegram: {
-        expandOnReady: true, // Развернуть webapp при готовности
-        enableClosingConfirmation: false, // Подтверждение закрытия
-        disableNotification: false // Отключить уведомления
-    },
-    
-    // Режим работы: local (локальный) или remote (удаленный)
-    mode: 'local',
-    
-    // Информация о том, что все данные идут через бота
-    info: {
-        description: 'Webapp работает локально, все данные передаются через Telegram бота',
-        noExternalServers: true
+        expandOnLoad: true,
+        showMainButton: false,
+        enableClosingConfirmation: false
     }
 };
 
