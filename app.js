@@ -1,24 +1,54 @@
 // Telegram Web App инициализация
-let tg = window.Telegram.WebApp;
+let tg = null;
 let user = null;
 
 // Инициализация приложения
 document.addEventListener('DOMContentLoaded', function() {
-    // Инициализируем Telegram Web App
-    tg.ready();
-    tg.expand();
-    
-    // Получаем данные пользователя
-    user = tg.initDataUnsafe?.user;
-    
-    // Загружаем список фильмов
-    loadMovies();
-    
-    // Настраиваем обработчики событий
-    setupEventListeners();
-    
-    // Применяем тему Telegram
-    applyTelegramTheme();
+    // Проверяем доступность Telegram Web App
+    if (window.Telegram && window.Telegram.WebApp) {
+        tg = window.Telegram.WebApp;
+        
+        // Инициализируем Telegram Web App
+        try {
+            tg.ready();
+            tg.expand();
+            
+            // Добавляем обработчики событий
+            tg.onEvent('mainButtonClicked', () => {
+                showDebugInfo('📱 MainButton нажат', 'info');
+            });
+            
+            tg.onEvent('backButtonClicked', () => {
+                showDebugInfo('📱 BackButton нажат', 'info');
+            });
+            
+            tg.onEvent('themeChanged', () => {
+                showDebugInfo('🎨 Тема изменена', 'info');
+                applyTelegramTheme();
+            });
+            
+            showDebugInfo('✅ Telegram Web App инициализирован', 'success');
+        } catch (error) {
+            showDebugInfo(`❌ Ошибка инициализации: ${error.message}`, 'error');
+        }
+        
+        // Получаем данные пользователя
+        user = tg.initDataUnsafe?.user;
+        
+        // Загружаем список фильмов
+        loadMovies();
+        
+        // Настраиваем обработчики событий
+        setupEventListeners();
+        
+        // Применяем тему Telegram
+        applyTelegramTheme();
+        
+    } else {
+        showDebugInfo('❌ Telegram Web App недоступен', 'error');
+        // Показываем сообщение об ошибке
+        document.body.innerHTML = '<div style="padding: 20px; text-align: center;"><h2>❌ Ошибка</h2><p>Telegram Web App недоступен. Откройте этот файл через Telegram бота.</p></div>';
+    }
 });
 
 // Применение темы Telegram
@@ -117,6 +147,7 @@ async function addMovie() {
     const movieInput = document.getElementById('movieInput');
     const movieTitle = movieInput.value.trim();
     
+    showDebugInfo(`🎬 Попытка добавить фильм: ${movieTitle}`, 'info');
     console.log('🎬 Попытка добавить фильм:', movieTitle);
     
     if (!movieTitle) {
@@ -130,11 +161,13 @@ async function addMovie() {
     }
     
     try {
+        showDebugInfo('📤 Отправляем команду add_movie боту...', 'info');
         console.log('📤 Отправляем команду add_movie боту...');
         
         // Отправляем команду боту для добавления фильма
         await sendBotCommand('add_movie', { movie: movieTitle });
         
+        showDebugInfo('✅ Команда успешно отправлена боту', 'success');
         console.log('✅ Команда успешно отправлена боту');
         showNotification('Команда добавления фильма отправлена боту!', 'success');
         movieInput.value = '';
@@ -143,6 +176,7 @@ async function addMovie() {
         // Бот обновит список автоматически
         
     } catch (error) {
+        showDebugInfo(`❌ Ошибка добавления фильма: ${error.message}`, 'error');
         console.error('❌ Ошибка добавления фильма:', error);
         showNotification('Не удалось добавить фильм', 'error');
     }
@@ -171,16 +205,30 @@ async function removeMovie(movieTitle, index) {
 // Отправка команды боту через Telegram Web App
 async function sendBotCommand(command, data = {}) {
     try {
+        showDebugInfo('🚀 Начинаем отправку команды боту...', 'info');
         console.log('🚀 Начинаем отправку команды боту...');
         
         // Проверяем, что мы в Telegram Web App
-        if (!window.Telegram || !window.Telegram.WebApp) {
-            console.error('❌ Telegram Web App не доступен');
-            throw new Error('Telegram Web App не доступен');
+        if (!tg) {
+            const error = '❌ Telegram Web App не инициализирован';
+            showDebugInfo(error, 'error');
+            console.error(error);
+            throw new Error('Telegram Web App не инициализирован');
         }
         
+        showDebugInfo('✅ Telegram Web App доступен', 'success');
         console.log('✅ Telegram Web App доступен');
-        console.log('📱 tg объект:', window.Telegram.WebApp);
+        console.log('📱 tg объект:', tg);
+        
+        // Проверяем доступные методы
+        const availableMethods = [];
+        if (tg.sendData) availableMethods.push('sendData');
+        if (tg.postEvent) availableMethods.push('postEvent');
+        if (tg.MainButton) availableMethods.push('MainButton');
+        if (tg.BackButton) availableMethods.push('BackButton');
+        
+        showDebugInfo(`🔧 Доступные методы: ${availableMethods.join(', ')}`, 'info');
+        console.log('🔧 Доступные методы:', availableMethods);
         
         // Формируем данные команды
         const commandData = {
@@ -189,17 +237,28 @@ async function sendBotCommand(command, data = {}) {
             timestamp: Date.now()
         };
         
+        showDebugInfo(`📤 Отправляем команду: ${command}`, 'info');
         console.log('📤 Отправляем команду боту:', commandData);
         console.log('📤 JSON данные:', JSON.stringify(commandData));
         
         // Отправляем данные через Telegram Web App
-        const result = window.Telegram.WebApp.sendData(JSON.stringify(commandData));
+        let result;
+        
+        // Используем только рабочий метод sendData
+        if (!tg || !tg.sendData) {
+            throw new Error('sendData недоступен');
+        }
+        
+        result = tg.sendData(JSON.stringify(commandData));
+        showDebugInfo(`📤 Результат sendData: ${result}`, 'info');
         console.log('📤 Результат sendData:', result);
         
         // Отправляем команду боту и ждем ответа
         return { success: true, message: 'Команда отправлена боту' };
         
     } catch (error) {
+        const errorMsg = `❌ Ошибка отправки команды боту: ${error.message}`;
+        showDebugInfo(errorMsg, 'error');
         console.error('❌ Ошибка отправки команды боту:', error);
         throw error;
     }
@@ -281,3 +340,41 @@ window.WatchlistApp = {
     removeMovie,
     showNotification
 }; 
+
+// Показ отладочной информации
+function showDebugInfo(message, type = 'info') {
+    console.log(`🐛 DEBUG: ${message}`);
+    
+    // Показываем видимое уведомление
+    const debugContainer = document.getElementById('debugContainer') || createDebugContainer();
+    
+    const debugItem = document.createElement('div');
+    debugItem.className = `debug-item ${type}`;
+    debugItem.innerHTML = `
+        <span class="debug-time">${new Date().toLocaleTimeString()}</span>
+        <span class="debug-message">${message}</span>
+    `;
+    
+    debugContainer.appendChild(debugItem);
+    
+    // Автоматически удаляем через 10 секунд
+    setTimeout(() => {
+        if (debugItem.parentNode) {
+            debugItem.parentNode.removeChild(debugItem);
+        }
+    }, 10000);
+}
+
+// Создание контейнера для отладочной информации
+function createDebugContainer() {
+    const container = document.createElement('div');
+    container.id = 'debugContainer';
+    container.className = 'debug-container';
+    container.innerHTML = '<h4>🐛 Отладочная информация:</h4>';
+    
+    // Вставляем после основного контента
+    const mainContent = document.querySelector('.main-content') || document.body;
+    mainContent.appendChild(container);
+    
+    return container;
+} 
