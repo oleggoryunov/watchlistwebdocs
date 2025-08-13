@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Web App API Test</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .test-button {
+            background: #0088cc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .test-button:hover {
+            background: #006699;
+        }
+        .result {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Тест Telegram Web App API</h1>
+    
+    <div class="test-section">
+        <h3>1. Проверка доступности API</h3>
+        <button class="test-button" onclick="testAvailability()">Проверить доступность</button>
+        <div id="availability-result" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>2. Тест sendData</h3>
+        <button class="test-button" onclick="testSendData()">Тест sendData</button>
+        <div id="senddata-result" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>3. Тест postEvent</h3>
+        <button class="test-button" onclick="testPostEvent()">Тест postEvent</button>
+        <div id="postevent-result" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>4. Тест MainButton</h3>
+        <button class="test-button" onclick="testMainButton()">Тест MainButton</button>
+        <div id="mainbutton-result" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>5. Тест BackButton</h3>
+        <button class="test-button" onclick="testBackButton()">Тест BackButton</button>
+        <div id="backbutton-result" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>6. Тест всех методов</h3>
+        <button class="test-button" onclick="testAllMethods()">Тест всех методов</button>
+        <div id="allmethods-result" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>7. Консольные команды</h3>
+        <p>Выполните эти команды в консоли браузера (F12):</p>
+        <div class="result info">
+// Проверить объект Telegram
+console.log('Telegram object:', window.Telegram);
+
+// Проверить WebApp объект
+console.log('WebApp object:', window.Telegram?.WebApp);
+
+// Проверить все доступные методы
+if (window.Telegram?.WebApp) {
+    console.log('Available methods:', Object.getOwnPropertyNames(window.Telegram.WebApp));
+}
+
+// Проверить sendData
+if (window.Telegram?.WebApp?.sendData) {
+    console.log('sendData available:', typeof window.Telegram.WebApp.sendData);
+}
+
+// Проверить postEvent
+if (window.Telegram?.WebApp?.postEvent) {
+    console.log('postEvent available:', typeof window.Telegram.WebApp.postEvent);
+}
+        </div>
+    </div>
+
+    <script>
+        // Инициализация Telegram Web App
+        let tg = window.Telegram?.WebApp;
+        
+        if (tg) {
+            tg.ready();
+            tg.expand();
+        }
+        
+        function showResult(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = `result ${type}`;
+        }
+        
+        function testAvailability() {
+            const result = {
+                'window.Telegram': !!window.Telegram,
+                'window.Telegram.WebApp': !!window.Telegram?.WebApp,
+                'tg.ready': !!tg?.ready,
+                'tg.expand': !!tg?.expand,
+                'tg.sendData': !!tg?.sendData,
+                'tg.postEvent': !!tg?.postEvent,
+                'tg.MainButton': !!tg?.MainButton,
+                'tg.BackButton': !!tg?.BackButton
+            };
+            
+            showResult('availability-result', JSON.stringify(result, null, 2), 'success');
+        }
+        
+        function testSendData() {
+            if (!tg?.sendData) {
+                showResult('senddata-result', '❌ sendData не доступен', 'error');
+                return;
+            }
+            
+            try {
+                const testData = {
+                    command: 'test',
+                    data: { message: 'Hello from sendData' },
+                    timestamp: Date.now()
+                };
+                
+                const result = tg.sendData(JSON.stringify(testData));
+                showResult('senddata-result', `✅ sendData выполнен\nРезультат: ${result}\nДанные: ${JSON.stringify(testData, null, 2)}`, 'success');
+            } catch (error) {
+                showResult('senddata-result', `❌ Ошибка sendData: ${error.message}`, 'error');
+            }
+        }
+        
+        function testPostEvent() {
+            if (!tg?.postEvent) {
+                showResult('postevent-result', '❌ postEvent не доступен', 'error');
+                return;
+            }
+            
+            try {
+                const testData = {
+                    command: 'test',
+                    data: { message: 'Hello from postEvent' },
+                    timestamp: Date.now()
+                };
+                
+                const result = tg.postEvent('web_app_data_send', testData);
+                showResult('postevent-result', `✅ postEvent выполнен\nРезультат: ${result}\nДанные: ${JSON.stringify(testData, null, 2)}`, 'success');
+            } catch (error) {
+                showResult('postevent-result', `❌ Ошибка postEvent: ${error.message}`, 'error');
+            }
+        }
+        
+        function testMainButton() {
+            if (!tg?.MainButton) {
+                showResult('mainbutton-result', '❌ MainButton не доступен', 'error');
+                return;
+            }
+            
+            try {
+                tg.MainButton.setText('Тест кнопки');
+                tg.MainButton.show();
+                
+                tg.MainButton.onClick(() => {
+                    showResult('mainbutton-result', '✅ MainButton нажат!', 'success');
+                    tg.MainButton.hide();
+                });
+                
+                showResult('mainbutton-result', '✅ MainButton показан и настроен\nНажмите на кнопку внизу экрана', 'info');
+            } catch (error) {
+                showResult('mainbutton-result', `❌ Ошибка MainButton: ${error.message}`, 'error');
+            }
+        }
+        
+        function testBackButton() {
+            if (!tg?.BackButton) {
+                showResult('backbutton-result', '❌ BackButton не доступен', 'error');
+                return;
+            }
+            
+            try {
+                tg.BackButton.show();
+                
+                tg.BackButton.onClick(() => {
+                    showResult('backbutton-result', '✅ BackButton нажат!', 'success');
+                    tg.BackButton.hide();
+                });
+                
+                showResult('backbutton-result', '✅ BackButton показан и настроен\nНажмите на кнопку внизу экрана', 'info');
+            } catch (error) {
+                showResult('backbutton-result', `❌ Ошибка BackButton: ${error.message}`, 'error');
+            }
+        }
+        
+        function testAllMethods() {
+            const results = {};
+            
+            // Тестируем все доступные методы
+            if (tg?.sendData) {
+                try {
+                    const result = tg.sendData('{"test": "data"}');
+                    results.sendData = { success: true, result: result };
+                } catch (error) {
+                    results.sendData = { success: false, error: error.message };
+                }
+            }
+            
+            if (tg?.postEvent) {
+                try {
+                    const result = tg.postEvent('test_event', { test: 'data' });
+                    results.postEvent = { success: true, result: result };
+                } catch (error) {
+                    results.postEvent = { success: false, error: error.message };
+                }
+            }
+            
+            if (tg?.MainButton) {
+                try {
+                    tg.MainButton.setText('Тест');
+                    tg.MainButton.show();
+                    results.MainButton = { success: true, message: 'Кнопка показана' };
+                    setTimeout(() => tg.MainButton.hide(), 3000);
+                } catch (error) {
+                    results.MainButton = { success: false, error: error.message };
+                }
+            }
+            
+            showResult('allmethods-result', JSON.stringify(results, null, 2), 'info');
+        }
+    </script>
+</body>
+</html>
